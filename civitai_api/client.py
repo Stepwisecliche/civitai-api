@@ -1,7 +1,7 @@
 import requests
 from typing import Optional, Dict, Any
 from .exceptions import CivitaiAPIError, RateLimitError
-
+import urllib.parse
 class CivitaiAPIClient:
     BASE_URL = "https://civitai.com/api/v1"
 
@@ -25,6 +25,8 @@ class CivitaiAPIClient:
             raise CivitaiAPIError(f"An error occurred: {e}")
 
     def get(self, endpoint: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        params = self._url_encode_query(params)
+        #print(endpoint, params)
         return self._request("GET", endpoint, params=params)
 
     def post(self, endpoint: str, data: Dict[str, Any]) -> Dict[str, Any]:
@@ -35,3 +37,6 @@ class CivitaiAPIClient:
 
     def delete(self, endpoint: str) -> Dict[str, Any]:
         return self._request("DELETE", endpoint)
+    
+    def _url_encode_query(self,params, doseq=True):
+        return urllib.parse.urlencode(params, doseq=True)

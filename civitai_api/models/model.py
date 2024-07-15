@@ -10,7 +10,8 @@ class ModelType(Enum):
     LORA = "LORA"
     CONTROLNET = "Controlnet"
     POSES = "Poses"
-    LYCORIS = "Lycoris"
+    LoCon = "LoCon"
+    WILDCARDS = "Wildcards"
 
 class ModelMode(Enum):
     ARCHIVED = "Archived"

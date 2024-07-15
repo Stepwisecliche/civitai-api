@@ -17,6 +17,24 @@ class ModelPeriod(Enum):
     WEEK = "Week"
     DAY = "Day"
 
+class ModelCategory(Enum):
+    ACTION = "Action"
+    ANIMAL = "Animal"
+    ASSETS = "Assets"
+    BACKGROUND = "Background"
+    BASE_MODEL = "Base Model"
+    BUILDINGS = "Buildings"
+    CELEBRITY = "Celebrity"
+    CHARACTER = "Character"
+    CLOTHING = "Clothing"
+    CONCEPT = "Concept"
+    GUIDE = "Guide"
+    OBJECTS = "Objects"
+    POSES = "Poses"
+    STYLE = "Style"
+    TOOL = "Tool"
+    VEHICLE = "Vehicle"
+    
 class CommercialUse(Enum):
     NONE = "None"
     IMAGE = "Image"
@@ -33,6 +51,7 @@ class ModelsAPI(CivitaiAPIClient):
                     allow_no_credit: Optional[bool] = None, allow_derivatives: Optional[bool] = None,
                     allow_different_licenses: Optional[bool] = None,
                     base_models: Optional[List[BaseModel]] = None,
+                    categories: Optional[List[ModelCategory]] = None,
                     allow_commercial_use: Optional[List[CommercialUse]] = None) -> List[Model]:
         
         """
@@ -54,6 +73,7 @@ class ModelsAPI(CivitaiAPIClient):
         :param allow_derivatives: Filter to models that allow or don't allow creating derivatives
         :param allow_different_licenses: Filter to models that allow or don't allow derivatives to have a different license
         :param allow_commercial_use: Filter to models based on their commercial permissions
+        :param categories: Filter to models based on their category
         :return: A list of Model objects
         """
         params = {
@@ -62,8 +82,8 @@ class ModelsAPI(CivitaiAPIClient):
             'query': query,
             'tag': tag,
             'username': username,
-            'types': ','.join([t.value for t in types]) if types else None,
-            'sort': sort.value if sort else None,
+            'modelType': [t.value for t in types] if types else None,
+            'sortBy': sort.value if sort else None,
             'period': period.value if period else None,
             'rating': rating,
             'favorites': favorites,
@@ -72,6 +92,8 @@ class ModelsAPI(CivitaiAPIClient):
             'allowNoCredit': allow_no_credit,
             'allowDerivatives': allow_derivatives,
             'allowDifferentLicenses': allow_different_licenses,
+            'baseModel': [m.value for m in base_models] if base_models else None,
+            'category': [c.value for c in categories] if categories else None
         }
 
         # Handle allowCommercialUse as a list of values
@@ -86,8 +108,8 @@ class ModelsAPI(CivitaiAPIClient):
         models = self._parse_models(parsed_response.get('items', []))
 
         # Filter models based on base_models parameter
-        if base_models:
-            models = [model for model in models if any(version.baseModel in [bm.value for bm in base_models] for version in model.modelVersions)]
+        # if base_models:
+        #     models = [model for model in models if any(version.baseModel in [bm.value for bm in base_models] for version in model.modelVersions)]
 
         return models
 
