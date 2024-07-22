@@ -1,10 +1,11 @@
-from typing import List, Optional
+from typing import List, Optional, Dict, Any,Tuple, Union, Generator
 from ..client import CivitaiAPIClient
 from ..models.model import Model, ModelType, ModelMode, ModelCreator, ModelStats, BaseModel
 from ..models.model_version import ModelVersion, ModelVersionFile, ModelVersionImage, ModelVersionStats
 from ..utils import parse_response, parse_datetime, create_enum_list, safe_get
 from enum import Enum
-
+from urllib.parse import urlparse, parse_qsl
+import logging
 class ModelSort(Enum):
     HIGHEST_RATED = "Highest Rated"
     MOST_DOWNLOADED = "Most Downloaded"
@@ -41,8 +42,11 @@ class CommercialUse(Enum):
     RENT = "Rent"
     SELL = "Sell"
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 class ModelsAPI(CivitaiAPIClient):
-    def list_models(self, limit: Optional[int] = None, page: Optional[int] = None,
+    def list_models(self, limit: Optional[int] = 100, page: Optional[int] = 1,
                     query: Optional[str] = None, tag: Optional[str] = None,
                     username: Optional[str] = None, types: Optional[List[ModelType]] = None,
                     sort: Optional[ModelSort] = None, period: Optional[ModelPeriod] = None,
@@ -52,77 +56,91 @@ class ModelsAPI(CivitaiAPIClient):
                     allow_different_licenses: Optional[bool] = None,
                     base_models: Optional[List[BaseModel]] = None,
                     categories: Optional[List[ModelCategory]] = None,
-                    allow_commercial_use: Optional[List[CommercialUse]] = None) -> List[Model]:
+                    allow_commercial_use: Optional[List[CommercialUse]] = None) -> Generator[List[Model], None, None]:
         
-        """
-        Get a list of models.
+        print("DEBUG: Entering modified list_models method")
+        
+        url = f"{self.BASE_URL}/models"
+        params = self._construct_params(locals())
 
-        :param limit: The number of results to be returned per page (1-200, default 100)
-        :param page: The page from which to start fetching models
-        :param query: Search query to filter models by name
-        :param tag: Search query to filter models by tag
-        :param username: Search query to filter models by user
-        :param types: The type of model to filter with
-        :param sort: The order in which to sort the results
-        :param period: The time frame in which the models will be sorted
-        :param rating: The rating to filter the models with
-        :param favorites: Filter to favorites of the authenticated user
-        :param hidden: Filter to hidden models of the authenticated user
-        :param primary_file_only: Only include the primary file for each model
-        :param allow_no_credit: Filter to models that require or don't require crediting
-        :param allow_derivatives: Filter to models that allow or don't allow creating derivatives
-        :param allow_different_licenses: Filter to models that allow or don't allow derivatives to have a different license
-        :param allow_commercial_use: Filter to models based on their commercial permissions
-        :param categories: Filter to models based on their category
-        :return: A list of Model objects
-        """
+        while True:
+            print(f"DEBUG: Fetching URL: {url}")
+            print(f"DEBUG: Params: {params}")
+
+            response = self.session.get(url, params=params)
+            response.raise_for_status()
+            data = response.json()
+            
+            models = self._parse_models(data.get('items', []))
+            yield models
+
+            metadata = data.get('metadata', {})
+            print(f"DEBUG: Metadata: {metadata}")
+            
+            next_page_url = metadata.get('nextPage')
+            print(f"DEBUG: Next page URL: {next_page_url}")
+            
+            if next_page_url:
+                parsed_url = urlparse(next_page_url)
+                url = f"{parsed_url.scheme}://{parsed_url.netloc}{parsed_url.path}"
+                params = dict(parse_qsl(parsed_url.query))
+            else:
+                print("DEBUG: No more pages available")
+                break
+
+    def _construct_params(self, kwargs):
         params = {
-            'limit': limit,
-            'page': page,
-            'query': query,
-            'tag': tag,
-            'username': username,
-            'modelType': [t.value for t in types] if types else None,
-            'sortBy': sort.value if sort else None,
-            'period': period.value if period else None,
-            'rating': rating,
-            'favorites': favorites,
-            'hidden': hidden,
-            'primaryFileOnly': primary_file_only,
-            'allowNoCredit': allow_no_credit,
-            'allowDerivatives': allow_derivatives,
-            'allowDifferentLicenses': allow_different_licenses,
-            'baseModel': [m.value for m in base_models] if base_models else None,
-            'category': [c.value for c in categories] if categories else None
+            'limit': kwargs.get('limit'),
+            'page': kwargs.get('page'),
+            'query': kwargs.get('query'),
+            'tag': kwargs.get('tag'),
+            'username': kwargs.get('username'),
+            'modelType': [t.value for t in kwargs.get('types', [])] if kwargs.get('types') else None,
+            'sortBy': kwargs.get('sort').value if kwargs.get('sort') else None,
+            'period': kwargs.get('period').value if kwargs.get('period') else None,
+            'rating': kwargs.get('rating'),
+            'favorites': kwargs.get('favorites'),
+            'hidden': kwargs.get('hidden'),
+            'primaryFileOnly': kwargs.get('primary_file_only'),
+            'allowNoCredit': kwargs.get('allow_no_credit'),
+            'allowDerivatives': kwargs.get('allow_derivatives'),
+            'allowDifferentLicenses': kwargs.get('allow_different_licenses'),
+            'baseModel': [m.value for m in kwargs.get('base_models', [])] if kwargs.get('base_models') else None,
+            'category': [c.value for c in kwargs.get('categories', [])] if kwargs.get('categories') else None,
         }
 
         # Handle allowCommercialUse as a list of values
-        if allow_commercial_use:
-            for i, use in enumerate(allow_commercial_use):
+        if kwargs.get('allow_commercial_use'):
+            for i, use in enumerate(kwargs['allow_commercial_use']):
                 params[f'allowCommercialUse[{i}]'] = use.value
 
-        response = self.get('models', params={k: v for k, v in params.items() if v is not None})
-
-        parsed_response = parse_response(response)
-        
-        models = self._parse_models(parsed_response.get('items', []))
-
-        # Filter models based on base_models parameter
-        # if base_models:
-        #     models = [model for model in models if any(version.baseModel in [bm.value for bm in base_models] for version in model.modelVersions)]
-
-        return models
+        return {k: v for k, v in params.items() if v is not None}
 
 
     def get_model(self, model_id: int) -> Model:
-        """
-        Get a specific model by ID.
-
-        :param model_id: The ID of the model to retrieve
-        :return: A Model object
-        """
-        response = self.get(f'models/{model_id}')
-        return self._parse_models([response])[0]
+        response = self.get(f"/models/{model_id}")
+        m = Model(
+            id=safe_get(response, 'id'),
+            name=safe_get(response, 'name'),
+            description=safe_get(response, 'description'),
+            type=ModelType(safe_get(response, 'type')),
+            nsfw=safe_get(response, 'nsfw'),
+            tags=safe_get(response, 'tags'),
+            mode=ModelMode(safe_get(response, 'mode')) if safe_get(response, 'mode') else None,
+            creator=ModelCreator(
+                username=safe_get(response.get('creator', {}), 'username'),
+                image=safe_get(response.get('creator', {}), 'image')
+            ),
+            stats=ModelStats(
+                downloadCount=safe_get(response.get('stats', {}), 'downloadCount'),
+                favoriteCount=safe_get(response.get('stats', {}), 'favoriteCount'),
+                commentCount=safe_get(response.get('stats', {}), 'commentCount'),
+                ratingCount=safe_get(response.get('stats', {}), 'ratingCount'),
+                rating=safe_get(response.get('stats', {}), 'rating')
+            ),
+            modelVersions=[self._parse_model_version(v) for v in safe_get(response, 'modelVersions')]
+        )
+        return m
 
     def _parse_models(self, items: List[dict]) -> List[Model]:
         models = []
@@ -165,7 +183,7 @@ class ModelsAPI(CivitaiAPIClient):
             files=[ModelVersionFile(
                 name=safe_get(f, 'name'),
                 id=safe_get(f, 'id'),
-                sizeKb=safe_get(f, 'sizeKb'),
+                sizeKb=safe_get(f, 'sizeKB'),
                 type=safe_get(f, 'type'),
                 format=safe_get(f, 'format'),
                 pickleScanResult=safe_get(f, 'pickleScanResult'),
@@ -173,7 +191,8 @@ class ModelsAPI(CivitaiAPIClient):
                 virusScanResult=safe_get(f, 'virusScanResult'),
                 scannedAt=parse_datetime(safe_get(f, 'scannedAt')) if safe_get(f, 'scannedAt') else None,
                 hashes=safe_get(f, 'hashes'),
-                downloadUrl=safe_get(f, 'downloadUrl')
+                downloadUrl=safe_get(f, 'downloadUrl'),
+                primary=safe_get(f, 'primary')
             ) for f in safe_get(version, 'files')],
             images=[ModelVersionImage(
                 url=safe_get(i, 'url'),

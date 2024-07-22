@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, Field
 from typing import List, Optional
 from enum import Enum
 
@@ -12,7 +12,12 @@ class ModelType(Enum):
     POSES = "Poses"
     LoCon = "LoCon"
     WILDCARDS = "Wildcards"
-
+    WORKFLOWS = "Workflows"
+    OTHER="Other"
+    VAE = "VAE"
+    MOTIONMODULE = "MotionModule"
+    DoRA = "DoRA"
+    
 class ModelMode(Enum):
     ARCHIVED = "Archived"
     TAKEN_DOWN = "TakenDown"
@@ -35,14 +40,6 @@ class ModelVersion:
     version: str
     downloadUrl: str
 
-    def get_authenticated_download_url(self, token: str) -> str:
-        """
-        Returns an authenticated download URL by appending the provided token as a query parameter.
-
-        :param token: The authentication token to be appended to the download URL
-        :return: The authenticated download URL
-        """
-        return f"{self.downloadUrl}?token={token}"
 
 @dataclass
 class Model:
@@ -52,10 +49,15 @@ class Model:
     type: ModelType
     nsfw: bool
     tags: List[str]
-    mode: Optional[ModelMode]
     creator: ModelCreator
     stats: ModelStats
-    modelVersions: List[ModelVersion]  # Forward reference resolved
+    modelVersions: List[ModelVersion]
+    mode: Optional[ModelMode] = None
+
+@dataclass
+class ModelMode(Enum):
+    ARCHIVED = "Archived"
+    TAKEN_DOWN = "TakenDown"
 
 @dataclass
 class BaseModel(Enum):

@@ -15,6 +15,7 @@ class ModelVersionFile:
     scannedAt: Optional[datetime]
     hashes: Dict[str, str]
     downloadUrl: str
+    primary: Optional[bool]
 
 @dataclass
 class ModelVersionImage:

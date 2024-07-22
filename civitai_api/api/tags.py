@@ -30,3 +30,4 @@ class TagsAPI(CivitaiAPIClient):
             ))
         
         return tags
+    
