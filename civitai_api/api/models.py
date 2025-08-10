@@ -171,7 +171,17 @@ class ModelsAPI(CivitaiAPIClient):
     def _parse_model_version(self, version: dict) -> ModelVersion:
         created_at_str = safe_get(version, 'createdAt')
         created_at = parse_datetime(created_at_str) if created_at_str else None
-
+        if safe_get(version, 'images'):
+            images=[ModelVersionImage(
+                url=safe_get(i, 'url'),
+                nsfw=safe_get(i, 'nsfw'),
+                width=safe_get(i, 'width'),
+                height=safe_get(i, 'height'),
+                hash=safe_get(i, 'hash'),
+                meta=safe_get(i, 'meta')
+            ) for i in safe_get(version, 'images')]
+        else:
+            images = None
         return ModelVersion(
             id=safe_get(version, 'id'),
             modelId=safe_get(version, 'modelId'),
@@ -194,14 +204,7 @@ class ModelsAPI(CivitaiAPIClient):
                 downloadUrl=safe_get(f, 'downloadUrl'),
                 primary=safe_get(f, 'primary')
             ) for f in safe_get(version, 'files')],
-            images=[ModelVersionImage(
-                url=safe_get(i, 'url'),
-                nsfw=safe_get(i, 'nsfw'),
-                width=safe_get(i, 'width'),
-                height=safe_get(i, 'height'),
-                hash=safe_get(i, 'hash'),
-                meta=safe_get(i, 'meta')
-            ) for i in safe_get(version, 'images')],
+            images=images,
             stats=ModelVersionStats(
                 downloadCount=safe_get(version.get('stats', {}), 'downloadCount'),
                 ratingCount=safe_get(version.get('stats', {}), 'ratingCount'),
