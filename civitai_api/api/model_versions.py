@@ -1,3 +1,8 @@
+"""
+This module provides the ModelVersionsAPI class for interacting with model version endpoints
+of the Civitai API. It includes methods to retrieve model versions by ID or hash.
+"""
+
 from ..client import CivitaiAPIClient
 from ..models.model_version import ModelVersion
 from .models import ModelsAPI

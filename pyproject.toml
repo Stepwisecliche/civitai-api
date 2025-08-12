@@ -1,0 +1,29 @@
+[project]
+name = "civitai-api"
+version = "0.1.0"
+description = "A Python wrapper for the Civitai REST API, providing easy access to models, images, creators, tags, and more."
+authors = [
+    {name = "Joseph Ciavattone",email = "Jciavatt@gmail.com"}
+]
+license = {text = "MIT License"}
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "requests (>=2.32.4,<3.0.0)"
+]
+
+[tool.poetry]
+
+[tool.poetry.group.dev.dependencies]
+mypy = "^1.17.1"
+pytest = "^8.4.1"
+ruff = "^0.12.8"
+types-requests = "^2.32.4.20250809"
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.ruff.lint]
+ignore = ["N815"]
