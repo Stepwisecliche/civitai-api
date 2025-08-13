@@ -7,7 +7,7 @@ import requests
 from .exceptions import CivitaiAPIError, RateLimitError
 
 if TYPE_CHECKING:
-    from civitai_api import (
+    from civitai_api.models import (
         BaseModel,
         CommercialUse,
         Model,

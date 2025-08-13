@@ -5,6 +5,7 @@ from .api.images import ImagesAPI
 from .api.model_versions import ModelVersionsAPI
 from .api.models import ModelsAPI
 from .api.tags import TagsAPI
+from .client import CivitaiAPIClient, CivitaiAPIError, RateLimitError
 
 
 class Civitai:
@@ -29,4 +30,4 @@ class Civitai:
         self.tags = TagsAPI(api_key)
 
 
-__all__ = ["Civitai"]
+__all__ = ["Civitai", "CivitaiAPIClient", "CivitaiAPIError", "RateLimitError"]
