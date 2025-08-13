@@ -17,6 +17,11 @@ class Civitai:
             api_key (str | None): Optional API key for authentication.
 
         """
+        # TODO: Implement global session singleton
+        # TODO: Modify the parent class (CivitAPIClient) to take the session object
+        # TODO: Implement context managers to handle session lifecycle and close connections after use.
+        # TODO: Clean up the use of abstract methods. I think this code may be have been generated a bit,
+        #   it has no consistent style.
         self.creators = CreatorsAPI(api_key)
         self.images = ImagesAPI(api_key)
         self.models = ModelsAPI(api_key)

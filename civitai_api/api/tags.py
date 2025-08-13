@@ -1,18 +1,25 @@
-from typing import List, Optional
+"""Provides the TagsAPI class for interacting with tag-related endpoints.
+
+Listing tags and parsing tag responses.
+"""
+
+from typing import Optional
+
 from ..client import CivitaiAPIClient
 from ..models.tag import Tag
 from ..utils import parse_response, safe_get
 
 
 class TagsAPI(CivitaiAPIClient):
+    """API client for interacting with tags in the Civitai platform."""
+
     def list_tags(
         self,
-        limit: Optional[int] = None,
-        page: Optional[int] = None,
-        query: Optional[str] = None,
-    ) -> List[Tag]:
-        """
-        Get a list of tags.
+        limit: int | None = None,
+        page: int | None = None,
+        query: str | None = None,
+    ) -> list[Tag]:
+        """Get a list of tags.
 
         :param limit: The number of results to be returned per page (1-200, default 20)
         :param page: The page from which to start fetching tags
@@ -25,14 +32,11 @@ class TagsAPI(CivitaiAPIClient):
         )
         parsed_response = parse_response(response)
 
-        tags = []
-        for item in parsed_response["items"]:
-            tags.append(
-                Tag(
-                    name=safe_get(item, "name"),
-                    modelCount=safe_get(item, "modelCount"),
-                    link=safe_get(item, "link"),
-                )
+        return [
+            Tag(
+                name=safe_get(item, "name"),
+                modelCount=safe_get(item, "modelCount"),
+                link=safe_get(item, "link"),
             )
-
-        return tags
+            for item in parsed_response["items"]
+        ]
