@@ -1,3 +1,8 @@
+"""Unit tests for the CivitaiAPIClient class and related error handling.
+
+This module contains tests for initialization, HTTP methods, error handling, and abstract methods.
+"""
+
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -51,17 +56,22 @@ def test_request_handles_rate_limit():
 def test_request_handles_http_error():
     client = DummyClient()
 
-    class DummyHTTPError(Exception):
-        response = type("obj", (object,), {"status_code": 400})
+    from requests.exceptions import HTTPError
 
-    with patch.object(client.session, "request", side_effect=DummyHTTPError()):
+    mock_response = MagicMock()
+    mock_response.raise_for_status.side_effect = HTTPError(
+        response=MagicMock(status_code=400)
+    )
+    with patch.object(client.session, "request", return_value=mock_response):
         with pytest.raises(CivitaiAPIError):
             client._request("GET", "url")
 
 
 def test_request_handles_request_exception():
     client = DummyClient()
-    with patch.object(client.session, "request", side_effect=Exception("fail")):
+    from requests.exceptions import RequestException
+
+    with patch.object(client.session, "request", side_effect=RequestException("fail")):
         with pytest.raises(CivitaiAPIError):
             client._request("GET", "url")
 
