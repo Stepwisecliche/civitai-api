@@ -189,10 +189,7 @@ class ModelsAPI(CivitaiAPIClient):
     def get_model(self, model_id: int | str) -> Model:
         """Fetch a model by its ID."""
         response = self.get(f"/models/{model_id}")
-        # TODO: Evaluate the need for safe_get. It appears to be an unecessary layer of abstraction.
-        #   It does the exact same thing as d.get() except it adds an additional layer of fuck
-        #   with ruff and the type checkers.
-        # also a lot of these issues could be addressed by using pydantic models for our model classes.
+
         m = Model(
             id=safe_get(response, "id"),
             name=safe_get(response, "name"),

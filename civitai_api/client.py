@@ -35,8 +35,6 @@ class CivitaiAPIClient:
 
         """
         self.api_key = api_key
-        # TODO(Joe): Child models are running super(), so every child model is creating a new session. This may be what is causing
-        # issues with too many connections in the pool.
         self.session = requests.Session()
         if api_key:
             self.session.headers.update({"Authorization": f"Bearer {api_key}"})
@@ -131,10 +129,9 @@ class CivitaiAPIClient:
     def _url_encode_query(
         self, params: dict[str, Any]
     ) -> str:  # removed doseq kwarg from function arguments.
-        # TODO(Joe): Learn about doseq to know why we need it to be true.
+
         return urllib.parse.urlencode(params, doseq=True)
 
-    # TODO(Joe): why do we need this? For reference?
     @abstractmethod
     def list_models(
         self,
