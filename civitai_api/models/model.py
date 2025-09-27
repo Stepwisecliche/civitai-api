@@ -28,6 +28,7 @@ class ModelType(Enum):
     VAE = "VAE"
     MOTIONMODULE = "MotionModule"
     DoRA = "DoRA"
+    UPSCALER = "Upscaler"
 
 
 @dataclass
