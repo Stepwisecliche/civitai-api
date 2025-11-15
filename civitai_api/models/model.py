@@ -29,6 +29,7 @@ class ModelType(Enum):
     MOTIONMODULE = "MotionModule"
     DoRA = "DoRA"
     UPSCALER = "Upscaler"
+    DETECTION = "Detection"
 
 
 @dataclass
