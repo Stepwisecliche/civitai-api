@@ -30,6 +30,7 @@ class ModelType(Enum):
     DoRA = "DoRA"
     UPSCALER = "Upscaler"
     DETECTION = "Detection"
+    TEXT_ENCODER = "TextEncoder"
 
 
 @dataclass
